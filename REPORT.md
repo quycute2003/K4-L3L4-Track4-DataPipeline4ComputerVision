@@ -7,7 +7,9 @@
 | Họ và tên | Phạm Xuân Quý |
 | MSSV (đúng bằng `LAB_STUDENT_ID` trong `.env`) | 2A202602745 |
 | GitHub | quycute2003 |
-| Trip dùng cho bài tập sập và chạy lại (xem GUIDE, bước 5) | `<điền: trip-xxxxx>` |
+| Trip dùng cho bài tập sập và chạy lại (xem GUIDE, bước 5) | `trip-02134` |
+
+Quy ước chọn trip cho MSSV có chữ: giữ nguyên `LAB_STUDENT_ID=2A202602745` khi chia dataset; riêng bài tập sập lấy toàn bộ chữ số `2202602745`, tính `2202602745 % 26 = 5` trong danh sách trip đã sắp xếp, được `trip-02134`. Lệnh `int(MSSV)` nguyên bản của GUIDE không hỗ trợ chữ `A`.
 
 ## Kết quả cuối
 
@@ -30,12 +32,22 @@ Tách bảng theo nguồn giữ nguyên khác biệt schema để có thể ki�
 ### Câu 2
 Pipeline đưa hai nguồn về một schema như thế nào (đơn vị, kiểu thời gian, **độ lệch đồng hồ**)? Bằng chứng nào trong kết quả bước 2 cho thấy đã đúng? Dán bảng quarantine của bạn (số dòng theo từng lý do, từng drive) và giải thích vì sao dòng lỗi vào `rejects` thay vì bị xoá.
 
-(trả lời ở đây)
+Silver đổi B về cùng tên cột với A, chia tốc độ km/h cho 3,6, bàn đạp % cho 100 và đổi epoch ms sang timestamp UTC. B được trừ đúng 1.500 ms; A giữ timestamp ISO UTC.
+Sau xử lý, A sạch 2.968 dòng, B sạch 3.181 dòng; tốc độ tối đa tương ứng 71 và 100 km/h. Telemetry B bắt đầu `2025-10-08 14:30:00.009+00:00`, chỉ cách video bắt đầu 9 ms, chứng minh đồng hồ đã được hiệu chỉnh.
+
+| Drive | duplicate | speed_missing | speed_out_of_range | Tổng rejects |
+|---|---:|---:|---:|---:|
+| A | 20 | 30 | 3 | 53 |
+| B | 20 | 30 | 3 | 53 |
+
+`2.968 + 53 = 3.021` và `3.181 + 53 = 3.234`: không mất dòng nhận về. Giữ dòng lỗi kèm lý do trong quarantine giúp kiểm toán, tìm nguyên nhân và xử lý lại khi có cách sửa, thay vì xoá mất bằng chứng.
 
 ### Câu 3
 Vì sao test `max_gap_ms` là `warn` còn `in_range` là `error`? Kết quả thí nghiệm `break-gate` của bạn (`break_gate.json`): test nào bắt được, bao nhiêu dòng, và điều đó cho biết gì về vai trò của "cổng chất lượng"?
 
-(trả lời ở đây)
+`max_gap_ms` dùng `warn` vì mất tín hiệu cảm biến là lỗi đã biết: cần báo để quan sát và kiểm tra đồng bộ nhưng chưa phải lý do loại toàn bộ drive. `in_range` dùng `error` vì tốc độ ngoài 0–70 m/s không được phép đi vào dataset.
+Trong `break_gate.json`, nới luật lên 1.000 m/s làm test `in_range_silver_telemetry_speed_mps__70__0` bắt được 6 dòng; kết quả `PASS=5 WARN=1 ERROR=1 SKIP=0`.
+Sau khôi phục, kết quả `PASS=6 WARN=1 ERROR=0 SKIP=0`. Luật biến đổi có thể bị nới sai nhưng test độc lập vẫn chặn xuất bản downstream; cảnh báo không đồng nghĩa pipeline thất bại.
 
 ## Bước 3 · Silver frames
 
