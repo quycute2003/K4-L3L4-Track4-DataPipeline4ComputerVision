@@ -30,7 +30,7 @@
     "bronze.raw_telemetry_b": 0,
     "bronze.trips_raw": 0,
     "bronze.video_files": 1,
-    "silver.frames": 27,
+    "silver.frames": 25,
     "silver.telemetry": 0,
     "silver.frames_flagged": 0,
     "silver.frame_telemetry": 0,
@@ -39,5 +39,5 @@
       "drive_a": "636ba1a98dfc5ba665d1c935e1d2064e69f4df360ff9ffbd15795957d5e7e9aa"
     }
   },
-  "created_at": "2026-10-12T14:54:30.558184+00:00"
+  "created_at": "2026-10-12T15:18:45.119557+00:00"
 }

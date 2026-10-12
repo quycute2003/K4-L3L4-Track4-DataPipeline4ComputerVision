@@ -1,6 +1,6 @@
 # REPORT — Lab Day 9
 
-> Điền **bằng lời và số liệu của chính bạn** (lấy từ đầu ra của `scripts/lab.sh step ...` và từ `report/evidence/*.json`). Bài làm công khai trên GitHub; giảng viên đối chiếu với lịch sử commit và với bài của các bạn khác. Mỗi câu 3 đến 8 dòng là đủ.
+> Báo cáo vận hành pipeline với MSSV `2A202602745`; số liệu và ảnh được lấy từ các lượt chạy trên máy của bài làm.
 
 | | |
 |---|---|
@@ -15,8 +15,8 @@ Quy ước chọn trip cho MSSV có chữ: giữ nguyên `LAB_STUDENT_ID=2A20260
 
 - `dataset_version` của bạn: `2d395955ed58`  (phải khớp `report/evidence/run_summary.json`)
 - Số khung hình train / val / test của bạn: `714 / 154 / 151`
-- `report/verify.txt`: tạo bằng `python3 scripts/check_submission.py --save-verify` (phải có `27/27 checks passed`).
-- Ảnh chụp trong `report/screenshots/`: `airflow_graph.png`, `minio_lake.png`, `metabase_dashboard.png`, và ảnh bài tập sập/chạy lại (log task đỏ thấy trip của bạn).
+- [Kết quả verify](report/verify.txt): đã lưu đầu ra `scripts/lab.sh verify` qua Git Bash trên Windows, đạt **27/27 checks passed**.
+- Ảnh: [DAG từ lake trống](report/screenshots/airflow_graph.png), [log task sập](report/screenshots/airflow_crash_log.png), [preview Clear](report/screenshots/airflow_clear_preview.png), [DAG phục hồi](report/screenshots/airflow_recovered_graph.png), [MinIO](report/screenshots/minio_lake.png), [Metabase](report/screenshots/metabase_dashboard.png), [câu hỏi riêng](report/screenshots/metabase_own_question.png).
 
 ## Bước 1 · Bronze
 
@@ -89,9 +89,9 @@ Giới hạn cần phân biệt: đây là băm thành viên/split, không phả
 ### Câu 8
 Đọc phần `lineage` trong `manifest.json` của dataset bạn. Trả lời "dataset này được tạo từ dữ liệu nào?" bằng chính nội dung đó. Nếu một người hỏi 3 tháng sau, thông tin nào giúp tái tạo lại đúng dataset này?
 
-Manifest hiện tại của `2d395955ed58` ghi các phiên bản Delta: `bronze.raw_telemetry_a`=0, `bronze.raw_telemetry_b`=0, `bronze.trips_raw`=0, `bronze.video_files`=1, `silver.frames`=27, `silver.telemetry`=0, `silver.frames_flagged`=0, `silver.frame_telemetry`=0. Bản manifest được lưu tại `report/evidence/dataset_manifest.json`.
+Manifest của lượt chạy cuối `2d395955ed58` ghi các phiên bản Delta: `bronze.raw_telemetry_a`=0, `bronze.raw_telemetry_b`=0, `bronze.trips_raw`=0, `bronze.video_files`=1, `silver.frames`=25, `silver.telemetry`=0, `silver.frames_flagged`=0, `silver.frame_telemetry`=0. Bản manifest được lưu tại `report/evidence/dataset_manifest.json`.
 Video A có SHA256 `636ba1a98dfc5ba665d1c935e1d2064e69f4df360ff9ffbd15795957d5e7e9aa`; B có SHA256 `bfa62703f645ff77a8578ae3fc74a00881140d38a404d43c8e2af265bbee9fdc`. Dataset được tạo từ các nguồn này, telemetry/trips Bronze, khung và telemetry Silver, rồi áp dụng luật loại đen/mờ/trùng/mất đồng bộ và split theo trip.
-Để tái tạo sau 3 tháng: cần giữ snapshot Delta/file nguồn tương ứng, checksum CSV trong `data/MANIFEST.json`, MSSV `2A202602745`, cấu hình dbt/ngưỡng, commit mã và phiên bản thư viện. Delta version chỉ hữu ích khi snapshot cũ còn được lưu; riêng manifest không chứa toàn bộ dữ liệu nguồn.
+Để tái tạo sau 3 tháng: cần giữ snapshot Delta/file nguồn tương ứng, checksum CSV trong `data/MANIFEST.json`, MSSV `2A202602745`, cấu hình dbt/ngưỡng, commit mã và phiên bản thư viện (đã lưu trong `runtime_versions.json`). Delta version chỉ hữu ích khi snapshot cũ còn được lưu; riêng manifest không chứa toàn bộ dữ liệu nguồn.
 
 ## Bước 5 · Điều phối và phục vụ
 

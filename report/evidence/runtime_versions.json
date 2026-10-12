@@ -1,0 +1,34 @@
+{
+  "versions": {
+    "deltalake": "1.6.6",
+    "duckdb": "1.5.6",
+    "dbt-duckdb": "1.11.0",
+    "dbt-core": "1.12.5",
+    "pyarrow": "26.0.0",
+    "boto3": "1.43.111",
+    "pillow": "12.3.0",
+    "numpy": "2.4.6"
+  },
+  "dbt_vars": {
+    "dark_luma": 12.0,
+    "dark_soft": 40.0,
+    "blur_var": 40.0,
+    "dup_hamming": 2,
+    "sync_tol_ms": 150,
+    "max_speed_mps": 70,
+    "split_train": 0.7,
+    "split_val": 0.15
+  },
+  "student_id": "2A202602745",
+  "fail_once": "",
+  "airflow": "2.10.5",
+  "source_commit": "c8e49c19b2ebe82fe04b50e332bcc33bd0bccf4e",
+  "code_trees": {
+    "pipeline": "90ed006b1f43be7a9f275d81c3736746bccae981",
+    "dbt": "d4a126332651f4a763e3f5c7b576bcd248519991",
+    "dags": "8aaaf3fcb013931c31b6e12523b745d2cf0252b4",
+    "docker": "af1c28d459311bacf7addc47fa6015d5a555e1a5",
+    "scripts": "6ad8b755f93ea037509ec5836d2759c371d8d6b9",
+    "tests": "36ea221bd6f209989a96e29fa2c2db11be7d7b8b"
+  }
+}
