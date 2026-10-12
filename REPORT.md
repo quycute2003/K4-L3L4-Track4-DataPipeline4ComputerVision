@@ -98,21 +98,44 @@ Video A có SHA256 `636ba1a98dfc5ba665d1c935e1d2064e69f4df360ff9ffbd15795957d5e7
 ### Câu 9
 Mô tả chính xác điều xảy ra khi trip của bạn sập rồi chạy lại: bao nhiêu task chuyển đỏ, bao nhiêu task `upstream_failed`, bạn clear gì, dữ liệu có nhân đôi không, `dataset_version` có đổi không? Bằng chứng (ảnh, số) là gì?
 
-(trả lời ở đây)
+Theo quy ước chữ số đã ghi ở đầu báo cáo, trip của bài tập là `trip-02134`, map index 5. Sau reset và trigger với `LAB_FAIL_ONCE=trip-02134`, có đúng 1 mapped task đỏ, 7 task downstream `upstream_failed` và 29 task thành công; log có `simulated crash while extracting trip-02134`.
+Trong giao diện Airflow chọn instance 5 và Clear task; chế độ mặc định có Downstream, preview liệt kê 8 task. Chỉ 1/26 task trích ảnh chạy lại (try 2); 25 instance đã thành công giữ nguyên thời điểm chạy. Bảy task downstream trước đó chưa được thực thi nay chạy tiếp, rồi DAG đạt 37/37 success.
+Sau phục hồi, bảng frames vẫn có 1.246 dòng, fingerprint `6c7480dfde7e`, dataset vẫn `2d395955ed58`, split 714/154/151, không nhân đôi. Bằng chứng: `airflow_crash_log.png`, `airflow_clear_preview.png`, `airflow_recovered_graph.png` và `airflow_crash.json`/`airflow_recovery.json`.
+Cần phân biệt chọn một task đỏ với phạm vi Clear: UI có thêm 7 downstream đang bị chặn; không clear 25 task trích ảnh xanh. Đã bỏ `LAB_FAIL_ONCE` khỏi cấu hình sau bài tập.
 
 ### Câu 10
 Nâng từ 2 drive lên **500 xe mỗi ngày**: ba thành phần nào của pipeline này sẽ vỡ đầu tiên, và bạn thay bằng gì (nối với slide 12, 22, 23)?
 
-(trả lời ở đây)
+Đây là dự đoán từ cấu hình/mã lab, chưa phải benchmark 500 xe/ngày. Ba nút thắt cụ thể:
+
+1. **Decode video và I/O:** `extract_trip` tải cả video cho từng trip, rồi FFmpeg giải mã và xử lý ảnh trên CPU. Nhiều trip của cùng drive tải lại cùng file. Tách worker decode theo drive/clip, dùng cache video tại worker và phân phối job theo cụm máy; cân nhắc tăng tốc giải mã sau khi đo throughput.
+2. **ELT dùng một file DuckDB:** dbt hiện chạy trên `/opt/work/lakehouse.duckdb`; chế độ nhúng read-write tập trung vào một tiến trình ghi nên tăng worker cùng ghi file này không giải quyết được scale. Chuyển phần join/biến đổi lớn sang Spark + Delta trên object storage, giữ dbt cho SQL và quality gate phù hợp với engine mới. Xem [DuckDB concurrency](https://www.duckdb.org/docs/current/connect/concurrency) và [Delta cho engine phân tán](https://docs.delta.io/delta-kernel/).
+3. **Airflow một máy và mapping:** `parallelism=2`, `silver_frames` chỉ chạy 1 instance cùng lúc, và `max_map_length` đọc trực tiếp từ Airflow là 1.024. Nếu mỗi xe có 13 trip như lab thì 500 xe tạo 6.500 mapped instance, vượt giới hạn hiện tại. Chia DAG/mapping theo drive hoặc batch, dùng KubernetesExecutor/CeleryExecutor với worker tách khỏi scheduler, đồng thời bỏ phụ thuộc vào file DuckDB dùng chung. Xem [Airflow executor](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html).
+
+Các thay đổi này tách storage/compute và đưa ELT sang xử lý phân tán để đáp ứng yêu cầu mở rộng được đề nhắc cùng slide 12, 22, 23; repo không kèm các slide để kiểm tra nội dung chi tiết.
 
 ## Câu hỏi riêng của bạn trên Metabase
 
 Câu SQL bạn thêm vào dashboard và điều nó cho biết:
 
-(trả lời ở đây)
+**Câu hỏi:** trip nào có tỷ lệ khung bị loại cao nhất, và điều kiện ánh sáng/tốc độ của trip đó là gì? Đã thêm câu hỏi `Trip nào mất nhiều khung nhất? — 2A202602745` vào [dashboard cục bộ](http://localhost:3000/dashboard/2), card ID 46.
+
+```sql
+select drive_id, trip_id,
+       round(100.0 * (frames - frames_kept) / nullif(frames, 0), 1) as dropped_pct,
+       frames, frames_kept, frames - frames_kept as frames_dropped,
+       lighting, conditions, avg_speed_kmh, split
+from marts.mart_trip_summary
+order by dropped_pct desc, frames desc, trip_id
+```
+
+Kết quả: `trip-04622` (drive A) bị loại 34/60 khung, tức 56,7%, cao nhất trong 26 trip; metadata Day/Clouds, tốc độ trung bình 67,1 km/h. `trip-03904` tiếp theo là 11/22 = 50%. Tỷ lệ này giúp ưu tiên xem video/trip có vấn đề; truy vấn đếm khung bị loại một lần theo Gold, không cộng các cờ có thể chồng lấn. Chưa thể kết luận nguyên nhân chỉ từ tốc độ và ánh sáng; cần xem các cờ và ảnh từng trip. Số liệu đầy đủ lưu trong `metabase_question.json`.
 
 ## Nhìn lại
 
 Điều bạn thấy bất ngờ nhất, điều gì còn chưa rõ, và một lỗi dữ liệu mà bạn nghĩ pipeline **chưa** bắt được (nếu có). Tối đa 8 dòng.
 
-(trả lời ở đây)
+Điều đáng chú ý từ lần chạy là khung tối không bị loại chỉ vì tối: drive B có 61 khung được gắn cờ, trong khi khung đen chỉ có 4. Chia theo frame khiến cả 26 trip rò rỉ giữa train/test dù tỷ lệ split trông hợp lý.
+Ngưỡng dHash 2 vẫn cần kiểm tra bằng ảnh thật trên điều kiện xe đi chậm/đường hầm; thí nghiệm đếm khung chưa chứng minh mẫu bị loại là dư thừa hoàn toàn.
+Một lỗi chưa được kiểm tra đầy đủ là GPS ngoài vùng hợp lệ hoặc nhảy vị trí phi thực tế: test hiện chủ yếu kiểm tra tốc độ, trùng, timestamp và chất lượng ảnh.
+Ngoài ra `dataset_version` chỉ băm thành viên và split, nên đổi nội dung ảnh mà giữ frame ID/split có thể không đổi ID dataset; checksum nguồn và lineage là phần cần thiết để truy vết.

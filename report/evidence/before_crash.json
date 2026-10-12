@@ -1,0 +1,13 @@
+{
+  "student_id": "2A202602745",
+  "frames_fingerprint": [
+    1246,
+    "6c7480dfde7e"
+  ],
+  "dataset_version": "2d395955ed58",
+  "by_split": {
+    "train": 714,
+    "test": 151,
+    "val": 154
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "student_id": "2A202602745",
+  "dag_run_id": "lab_crash_2A202602745_20261012T150301",
+  "selected_task": "silver_frames",
+  "map_index": 5,
+  "trip": "trip-02134",
+  "affected_tasks": 8,
+  "ui_preview": "Clear and Retry\n\nTask:silver_frames\n\nRun:lab_crash_2A202602745_20261012T150301\n\nMap Index:5\n\nInclude:\n\nPast\nFuture\nUpstream\nDownstream\nRecursive\nOnly Failed\nAffected Tasks: 8\nTASK NAME\n\t\nMAP INDEX\n\t\nRUN ID\n\npublish_lake\t-1\tlab_crash_2A202602745_20261012T150301\nexport_dataset\t-1\tlab_crash_2A202602745_20261012T150301\npublish_warehouse\t-1\tlab_crash_2A202602745_20261012T150301\ndbt_run_silver\t-1\tlab_crash_2A202602745_20261012T150301\ndbt_test_silver\t-1\tlab_crash_2A202602745_20261012T150301\ndbt_run_gold\t-1\tlab_crash_2A202602745_20261012T150301\ndbt_test_gold\t-1\tlab_crash_2A202602745_20261012T150301\nsilver_frames\t5\tlab_crash_2A202602745_20261012T150301\nCancel\nClear",
+  "method": "Airflow UI; selected mapped instance 5; default downstream inclusion"
+}
