@@ -76,17 +76,22 @@ Chọn ngưỡng 2 (149/53) theo cân bằng này. Xe đi chậm hoặc dừng t
 ### Câu 6
 Dựa vào `leakage.json`: chia theo khung hình làm bao nhiêu trip bị chia cắt, so với chia theo trip? Vì sao điều này làm điểm kiểm thử đẹp một cách giả tạo?
 
-(trả lời ở đây)
+Trong `leakage.json`, 1.019 khung còn lại thuộc 26 trip. Chia theo frame làm 26/26 trip nằm trong nhiều split, đồng thời cả 26 trip có frame ở cả train và test; chia theo trip của Gold có 0 trip bị chia cắt.
+Khung liền nhau chứa cùng cảnh, góc nhìn và điều kiện nên rất tương tự. Nếu chúng nằm ở hai phía train/test, mô hình có thể ghi nhớ cảnh đã thấy thay vì tổng quát sang chuyến mới; điểm test khi đó có thể cao giả tạo. Thí nghiệm này đo mức chồng lấn trip, không trực tiếp đo độ chính xác mô hình.
 
 ### Câu 7
 Vì sao `dataset_version` là **băm nội dung** chứ không phải ngày giờ hay số đếm? Hai lần chạy liên tiếp cho kết quả gì? Vì sao `dataset_version` của bạn **khác** bạn bè dù cùng dữ liệu (liên hệ MSSV)?
 
-(trả lời ở đây)
+Hai lần xuất dataset liên tiếp đều cho `2d395955ed58`, với 714 train / 154 val / 151 test. Thử MSSV `2A202602746` trong môi trường của riêng lệnh Docker làm version đổi thành `a11d315b867b` và số khung thành 674/169/176; khôi phục MSSV thật trả về version và số liệu ban đầu (`versioning.json`).
+Mã hiện tại băm danh sách đã sắp xếp `frame_id|split` bằng SHA256, lấy 12 ký tự: cùng tập thành viên và split cho cùng ID, không bị ảnh hưởng bởi thời điểm chạy. MSSV được nối vào `md5(trip_id || MSSV)` để xếp trip nên thay MSSV có thể thay split.
+Giới hạn cần phân biệt: đây là băm thành viên/split, không phải băm toàn bộ pixel hoặc telemetry. Để tái tạo nội dung đầy đủ còn phải dùng checksum nguồn, lineage, luật xử lý và môi trường chạy.
 
 ### Câu 8
 Đọc phần `lineage` trong `manifest.json` của dataset bạn. Trả lời "dataset này được tạo từ dữ liệu nào?" bằng chính nội dung đó. Nếu một người hỏi 3 tháng sau, thông tin nào giúp tái tạo lại đúng dataset này?
 
-(trả lời ở đây)
+Manifest hiện tại của `2d395955ed58` ghi các phiên bản Delta: `bronze.raw_telemetry_a`=0, `bronze.raw_telemetry_b`=0, `bronze.trips_raw`=0, `bronze.video_files`=1, `silver.frames`=27, `silver.telemetry`=0, `silver.frames_flagged`=0, `silver.frame_telemetry`=0. Bản manifest được lưu tại `report/evidence/dataset_manifest.json`.
+Video A có SHA256 `636ba1a98dfc5ba665d1c935e1d2064e69f4df360ff9ffbd15795957d5e7e9aa`; B có SHA256 `bfa62703f645ff77a8578ae3fc74a00881140d38a404d43c8e2af265bbee9fdc`. Dataset được tạo từ các nguồn này, telemetry/trips Bronze, khung và telemetry Silver, rồi áp dụng luật loại đen/mờ/trùng/mất đồng bộ và split theo trip.
+Để tái tạo sau 3 tháng: cần giữ snapshot Delta/file nguồn tương ứng, checksum CSV trong `data/MANIFEST.json`, MSSV `2A202602745`, cấu hình dbt/ngưỡng, commit mã và phiên bản thư viện. Delta version chỉ hữu ích khi snapshot cũ còn được lưu; riêng manifest không chứa toàn bộ dữ liệu nguồn.
 
 ## Bước 5 · Điều phối và phục vụ
 

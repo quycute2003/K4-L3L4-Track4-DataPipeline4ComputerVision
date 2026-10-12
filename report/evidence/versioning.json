@@ -1,0 +1,36 @@
+{
+  "student_id": "2A202602745",
+  "original_version": "2d395955ed58",
+  "repeat_export_version": "2d395955ed58",
+  "alternate_student_id": "2A202602746",
+  "alternate": {
+    "dataset_version": "a11d315b867b",
+    "frames": 1019,
+    "by_split": {
+      "train": 674,
+      "test": 176,
+      "val": 169
+    },
+    "trips_by_split": {
+      "train": 18,
+      "val": 4,
+      "test": 4
+    }
+  },
+  "restored": {
+    "dataset_version": "2d395955ed58",
+    "frames": 1019,
+    "by_split": {
+      "train": 714,
+      "test": 151,
+      "val": 154
+    },
+    "trips_by_split": {
+      "val": 4,
+      "train": 18,
+      "test": 4
+    }
+  },
+  "restored_to_original": true,
+  "scope": "Docker exec environment override; .env unchanged"
+}
