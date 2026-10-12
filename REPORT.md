@@ -54,18 +54,22 @@ Sau khôi phục, kết quả `PASS=6 WARN=1 ERROR=0 SKIP=0`. Luật biến đ�
 ### Câu 4
 Dựa vào `idempotency.json`: số dòng trước và sau hai lần chạy lại, và khi ghi kiểu `append`. Vì sao Delta `overwrite` theo partition (một trip) an toàn hơn xoá rồi ghi lại, nhất là khi giữa chừng có lỗi?
 
-(trả lời ở đây)
+Thí nghiệm chạy lại `trip-02134` hai lần: tổng bảng trước/sau đều 1.246 dòng, dấu vân tay đều `6c7480dfde7e`; trip có 60 khung. Biến thể append hai lần ghi 120 dòng cho cùng trip, tức 2× (`idempotency.json`).
+Delta ghi file mới rồi commit log nguyên tử cho phần dữ liệu khớp `trip_id`: lần đọc thấy snapshot trước hoặc sau commit, thay vì khoảng trống giữa xoá và ghi. Bảng phân vùng vật lý theo `drive_id`; predicate giới hạn phạm vi thay thế vào đúng trip.
+Khi lỗi xảy ra trước commit, snapshot đã commit vẫn đọc được và có thể chạy lại. Điều này bảo vệ giao dịch của bảng; ảnh JPG là object riêng nên tính tái lập còn phụ thuộc nguồn video và quá trình trích ảnh.
 
 ### Câu 5
 Khung hình **đen** và khung hình **tối** khác nhau thế nào, pipeline xử lý khác nhau ra sao, bạn có đồng ý không? Dựa vào `threshold.json`: nếu chọn ngưỡng 0, 2, 6 thì bao nhiêu khung bị coi là trùng ở mỗi drive? Bạn chọn ngưỡng nào, vì sao, và ngưỡng đó phụ thuộc vào tốc độ xe thế nào?
 
 | dHash khác tối đa | số khung trùng, drive A | số khung trùng, drive B |
 |---|---|---|
-| 0 | | |
-| 2 | | |
-| 6 | | |
+| 0 | 61 | 8 |
+| 2 | 149 | 53 |
+| 6 | 363 | 244 |
 
-(trả lời ở đây)
+Khung đen có brightness < 12; khung tối có 12 ≤ brightness < 40. A/B có 6/4 khung đen và 4/61 khung tối được gắn cờ; khung đen bị loại, còn tối không bị loại chỉ vì tối, nhưng vẫn có thể bị loại bởi cờ mờ, trùng hoặc mất đồng bộ. Giữ tình huống đường hầm/bóng râm là hợp lý để dataset phản ánh điều kiện thực.
+Theo `threshold.json`, bảng trên cho thấy ngưỡng 6 tăng số khung trùng lên 363/244, dễ bỏ nhiều mẫu khác nhau thật; ngưỡng 0 chỉ bắt 61/8, để lọt nhiều mẫu gần giống.
+Chọn ngưỡng 2 (149/53) theo cân bằng này. Xe đi chậm hoặc dừng tạo nhiều ảnh gần nhau, nên cần cân nhắc tốc độ và tần suất lấy mẫu khi hiệu chỉnh; pipeline hiện dùng một ngưỡng cố định, không tự đổi theo tốc độ.
 
 ## Bước 4 · Gold
 
